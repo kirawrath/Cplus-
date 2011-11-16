@@ -1,0 +1,5 @@
+Improve error output by displaying the line number. (Create a function in Node to handle that)
+Our lex doesn't recognize char or string literals like 'a' or "kira"
+Arrays weren't tested yet. (they aren't working at all...)
+Include implicit variable 'i' to for NUM.
+Should check for multiple declarations and declarations of the same ID in a different scope.
