@@ -9,16 +9,34 @@ Symbol_table::Symbol_table(){}
 
 t_entry* Symbol_table::insert(t_entry* t)
 {
-	unsigned n = entries.size();
+	/*unsigned n = entries.size();
 	for(int i=0; i<n; ++i)
 		if(entries[i]->ID == t->ID)
 		{
 			delete t;
 			return entries[i];
-		}
+		}*/
+
+	// Blindly pushing the new entry
+	// now it should be handled by Scope.
 	entries.push_back(t);
 	return t;
 }
+void Symbol_table::remove(t_entry* t)
+{
+	unsigned n = entries.size();
+	for(int i=0; i<n; ++i)
+		if(entries[i] == t)
+			entries.erase(entries.begin() + i);
+}
+void Symbol_table::remove(string id)
+{
+	unsigned n = entries.size();
+	for(int i=0; i<n; ++i)
+		if(entries[i]->ID == id)
+			entries.erase(entries.begin() + i);
+}
+
 t_entry* Symbol_table::get_entry(string id)
 {
 	unsigned n = entries.size();

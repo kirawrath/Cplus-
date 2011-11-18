@@ -1,6 +1,7 @@
 %{
 #include <iostream>
 #define SAVE_TOKEN yylval.str = new std::string(yytext, yyleng)
+#define SAVE_CHAR_TOKEN yylval.ch = yytext[1]
 #define SAVE_INT_TOKEN yylval.ival = atoi(yytext)
 
 #include "c+-.tab.h"
@@ -28,6 +29,7 @@ forever          { return FOREVER; }
 if               { return IF; }
 else             { return ELSE; }
 return           { return RETURN; }
+(\'.\')		{ SAVE_CHAR_TOKEN; return CHAR; }
 [a-z_A-Z][a-z_A-Z0-9]*    { SAVE_TOKEN; return ID;}
 
 \+  { return PLUS; }

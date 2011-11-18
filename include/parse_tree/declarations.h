@@ -49,10 +49,18 @@ class Var_declaration : public Node
 			try{
 				ids->child[i]->set_type(dt);
 			}catch(const char* problem){
-				cout<<problem<<endl;
+				cout << problem << endl;
 				cout << child[i]->get_id() << endl;
+				cout << "Var_declaration::evaluate()" << endl;
 			}
 		}
+	}
+	void check_scope(Scope_stack* scope)
+	{
+		
+		unsigned size = child.size();
+		for(int i=0; i<size; ++i)
+			child[i]->check_scope(scope);
 	}
 	vector<t_entry*>* get_entries()
 	{
@@ -80,6 +88,16 @@ class Vars_declarations : public Node
 				((Var_declaration*)child[i])->get_entries();
 			scope->push_same_level(vec);
 		}
+
+		entry_vec repeated = scope->
+			search_multiple_entries();
+		if(repeated)
+			for(unsigned i=0; i<repeated->size(); ++i)
+				cout << "Error: Multiple declarations for "
+					 << repeated->at(i)->ID << "." << endl;
+
+		for(int i=0; i<size; ++i)
+			child[i]->check_scope(scope);
 	}
 };
 class Parameter_list : public Node
@@ -109,6 +127,7 @@ class Parameter_list : public Node
 
 class Block : public Node
 {
+	protected:
 	entry_vec func_params;
 	public:
 	Block(Node* n0, Node* n1) : Node(n0, n1)
@@ -121,6 +140,9 @@ class Block : public Node
 	}
 	void check_scope(Scope_stack* scope)
 	{
+#ifdef DEBUG
+		cout << "Block::check_scope()1" << endl;
+#endif
 		Scope_level* level = new Scope_level();
 		scope->push_new_level(level);
 		
@@ -132,9 +154,19 @@ class Block : public Node
 			child[i]->check_scope(scope);
 
 		scope->pop();
+#ifdef DEBUG
+		cout << "Block::check_scope()2" << endl;
+#endif
 	}
 };
-
+class Cmd_list : public Block // A one command block (used by FOR and IF)
+{
+	public:
+	Cmd_list(Node* n0) : Block(new Null_node(), n0)
+	{
+		func_params = NULL;
+	}
+};
 class Function : public Node
 {
 	t_entry* entry;

@@ -35,6 +35,21 @@ t_entry* Scope_level::get_last()
 { // Return use this
 	return elements.back();
 }
+vector<t_entry*>* Scope_level::search_multiple_entries(
+		vector<t_entry*>* vec = NULL)
+{
+	unsigned size = elements.size();
+	for(int i=0; i<size; ++i)
+		for(int j=i+1; j<size; ++j)
+			if(elements[i]->ID == elements[j]->ID){
+				if(!vec)
+					vec = new vector<t_entry*>;
+				vec->push_back(elements[i]);
+			}
+	return vec;
+}
+					// You should check for more than the first entry!!!!
+
 /*===========Scope_stack======================*/
 
 /*============ New Level =====================*/
@@ -72,7 +87,7 @@ void Scope_stack::push_same_level(vector<t_entry*>* vec)
 	for(int i=0; i<size; ++i)
 		l->push(vec->at(i));
 
-	delete vec; // should check this again... FIXME
+	delete vec; // should check this again...
 }
 /*============== Others =====================*/
 Scope_level* Scope_stack::pop() // Always pop an entire level
@@ -139,5 +154,8 @@ void Scope_stack::print()
 	}
 	cout << "-----------------------" << endl;
 }
-
+vector<t_entry*>* Scope_stack::search_multiple_entries()
+{
+	return level.back()->search_multiple_entries();
+}
 #endif

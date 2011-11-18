@@ -75,13 +75,13 @@ class Aritimetic_expression : public Expression
 		if(child[1])
 			d1 = child[1]->get_type();
 		else
-			cout << "Null in Aritimetic!"<< endl;
+			cout << "Null in Arithmetic!"<< endl;
 #ifdef DEBUG
-		cout << "Aritimetic_expression: ";
+		cout << "Arithmetic_expression: ";
 		cout << d0 << " " << d1 << endl;
 #endif
 		if(d0 != d1)
-			throw "Different types in aritimetic expression";
+			throw "Different types in arithmetic expression";
 
 		set_type(d0);
 	}

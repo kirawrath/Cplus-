@@ -15,7 +15,6 @@ class Node
 	virtual string get_id(){cout<< "BOOYA2"<<endl;}
 	virtual data_type get_type(){cout<< "BOOYA3"<<endl;} 
 	virtual void set_type(data_type dt){
-		throw "Unimplemented set_type function!";
 		cout<< "BOOYA4"<<endl;}
 	virtual int get_line(){cout<< "BOOYA5"<<endl;}
 	virtual void set_indexer(int){cout<< "BOOYA6"<<endl;} //for arrays
@@ -23,9 +22,15 @@ class Node
 	virtual bool is_null(){return false;}
 	virtual void check_scope(Scope_stack* s)
 	{
+#ifdef DEBUG
+		cout << "Checking scope..." << endl;
+#endif
 		unsigned size = child.size();
 		for(int i=0; i<size; ++i)
 			child[i]->check_scope(s);
+#ifdef DEBUG
+		cout << "Scope checked!" << endl;
+#endif
 	}
 	
 	vector<Node*> child;

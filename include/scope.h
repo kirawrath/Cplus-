@@ -12,6 +12,8 @@ class Scope_level
 	t_entry* search(t_entry* entry);
 	t_entry* get_last();
 	void print();
+	vector<t_entry*>* search_multiple_entries(
+			vector<t_entry*>* v);
 };
 
 /*===========Scope_stack======================*/
@@ -34,6 +36,7 @@ class Scope_stack
 	t_entry* search(t_entry* entry);
 	t_entry* search_current_function(); // to Return;
 	void print(); //Debug purposes
+	vector<t_entry*>* search_multiple_entries();
 };
 
 #endif

@@ -2,7 +2,6 @@
 #include <cstdio>
 #include <iostream>
 #include "../include/parse_tree/all_nodes.h"
-//#include "../src/semantic_analyzer.cpp" //should change this later
 #include "../include/semantic_analyzer.h"
 #include "../include/scope.h"
 using namespace std;
@@ -41,6 +40,7 @@ Scope_stack* scope;
 	Arguments* arg;
 	Type* type;
     std::string* str;
+	char ch;
 }
 
 %error-verbose
@@ -51,6 +51,7 @@ Scope_stack* scope;
 %token FOR FOREVER
 %token IF ELSE
 %token RETURN
+%token <ch> CHAR
 %token <str> ID
 %token <ival> PLUS MINUS MULT DIV 
 %token <ival> SMALLER GREATER EQ DIFF AND
@@ -201,7 +202,7 @@ command:
 	| iteration_cmd {$$ = ($1);}
 	| return_cmd ENDI {$$ = ($1);}
 	| func_call ENDI {$$ = ($1);}
-	| ENDI {$$=new Null_node();}
+	| ENDI {$$ = new Null_node();}
     | error ENDI {$$ = new Null_node();
 #ifdef DEBUG
 		cout << "Command error" << endl;
@@ -212,11 +213,11 @@ command:
 selection_cmd:
 	IF '(' expression ')' cmd_list {$$ = new Selection($3, $5);}
 	| IF '(' expression ')' cmd_list ELSE cmd_list {$$ = new Selection($3, $5, $7);}
-    | error ELSE cmd_list {$$=new Null_node();}
+    | error ELSE cmd_list {$$ = new Null_node();}
 ;
 
 cmd_list:
-	command {$$ = ($1);}
+	command {$$ = new Cmd_list($1);}
 	| '{' var_decls cmd_list_center '}' {$$ = new Block($2, $3);}
     | error '}' {$$=new Null_node();}
 ;
@@ -227,18 +228,26 @@ cmd_list_center:
 		$$ = new Node($1);
 	}
 ;
-
 iteration_cmd:
 	FOREVER cmd_list {$$ = new Iteration($2);}
 	| FOR var cmd_list {$$ = new Iteration($2, $3);}
 	| FOR '(' var ')' cmd_list {$$ = new Iteration($3, $5);}
-    | FOR error cmd_list {$$ = new Iteration(new Null_node(), $3);}
 	| FOR NUM cmd_list {
 		$$ = new Iteration(new Const_num($2), $3);
 	}
 	| FOR '(' attribution ENDI expression ENDI attribution ')' cmd_list {
 		$$ = new Iteration($3, $5, $7, $9);
 	}
+	| FOR '(' ENDI expression ENDI attribution ')' cmd_list { //for(;exp;++i)
+		$$ = new Iteration(new Null_node(), $4, $6, $8);
+	}
+	| FOR '(' attribution ENDI expression ENDI ')' cmd_list { //for(i=0;exp;)
+		$$ = new Iteration($3, $5, new Null_node(), $8);
+	}
+	| FOR '(' ENDI expression ENDI ')' cmd_list { //for(;exp;)
+		$$ = new Iteration(new Null_node(), $4, new Null_node(), $7);
+	}
+    | FOR error cmd_list {$$ = new Iteration(new Null_node(), $3);}
 ;
 
 return_cmd:
@@ -259,6 +268,9 @@ attribution:
 #ifdef DEBUG
 		cout << "ribution!" << endl;
 #endif
+	}
+	| var_eq CHAR {
+		$$ = new Attribution($1, new Const_char($2));
 	}
 	| var INC {
 		$$ = new Attribution($1, INCR);
@@ -320,12 +332,23 @@ var:
     |ID '[' var ']' 
 	{
 		$$ = (Var*)st->get_node(*$1);
-		$$->set_indexer($3);
+		try{
+			$$->set_indexer($3);
+		}
+		catch(const char* problem){
+			cout << problem << endl;
+		}
 	}
     |ID '[' NUM ']'
 	{
 		$$ = (Var*)st->get_node(*$1);
-		$$->set_indexer($3);
+		try{
+			$$->set_indexer($3);
+		}
+		catch(const char* problem){
+			cout << problem << endl;
+		}
+
 	}
 ;
 

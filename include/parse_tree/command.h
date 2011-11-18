@@ -10,6 +10,31 @@ class Command : Node
 };
 class Attribution : public Node
 {
+	bool is_array(data_type dt)
+	{
+		if(dt == CARRAY || dt == LARRAY || dt == IARRAY)
+			return true;
+		return false;
+	}
+	bool compatible(Node* n0, Node* n1)
+	{
+		data_type d0 = n0->get_type();
+		data_type d1 = n1->get_type();
+		
+		if(d0 == d1)
+			return true;
+
+		if(is_array(d0))
+			if(((Array*)n0)->get_element_type() == d1)
+				return true;
+
+		if(is_array(d1))
+			if(((Array*)n1)->get_element_type() == d0)
+				return true;
+
+		return false;
+	}
+
 	public:
 	Attribution(Node* n0, op_type op_t) : Node(n0)// Unary
 	{
@@ -23,12 +48,23 @@ class Attribution : public Node
 		if(child.size()>1)
 		{
 			child[1]->evaluate();
-			if(child[0]->get_type() != child[1]->get_type())
-				puts("Incompatible types in assignment");
+			if( ! compatible(child[0], child[1]))
+			{
+				cout<<"Incompatible types in assignment on line "
+					<< yylineno << endl;
 #ifdef DEBUG
-			cout << child[0]->get_type() << endl;
-			cout << child[1]->get_type() << endl;
+				cout << child[0]->get_type() << endl;
+				cout << child[1]->get_type() << endl;
 #endif
+			}
+		}
+		else // Unary operator like ++ -- +-
+		{
+			for(unsigned i=0; i<child.size(); ++i)
+				if(child[i]->get_type() != IVAL)
+					if(child[i]->get_type() != LVAL) // Fuck you branch prediction!
+						cout << "Error: Incompatible type for unary operator"
+							 << " on line "<< yylineno << "." << endl;
 		}
 	}
 };
@@ -89,16 +125,25 @@ class Selection : public Node
 class Iteration : public Node
 {
 	public:
-	Iteration(Node* n0) : Node(n0){//forever
-		add_implicit_i();}
-	Iteration(Node* n0, Node* n1) : Node(n0,n1){
-		add_implicit_i();}
-	Iteration(Node* n0, Node* n1, Node* n2, Node* n3) : Node(n0,n1,n2,n3){
-		add_implicit_i();}
-	private:
-	void add_implicit_i()
+	void check_scope(Scope_stack* scope)
 	{
-		
+		unsigned size = child.size();
+		if( ! scope->search("i") ) //there is no "i" declared
+		{
+			t_entry* t = new t_entry("i");
+			t->type = IVAL;
+			entry_vec entries = new vector<t_entry*>;
+			entries->push_back(t);
+			((Block*)child[size-1])->set_func_params(entries);
+		}
+		for(int i=0; i<size; ++i)
+			child[i]->check_scope(scope);
+	}
+	Iteration(Node* n0) : Node(n0){//forever
+	}
+	Iteration(Node* n0, Node* n1) : Node(n0,n1){
+	}
+	Iteration(Node* n0, Node* n1, Node* n2, Node* n3) : Node(n0,n1,n2,n3){
 	}
 };
 class Return : public Node
@@ -118,16 +163,17 @@ class Return : public Node
 
 	void evaluate()
 	{
-		if(child.size()>0)
+		if(child.size()>0) // Max 1 child
 		{
 			if(child[0]->get_type() != dt)
 				cout << "Warning: Return statement in line "
 					 << yylineno <<" should "
-					 << "return " << type_str(child[0]->get_type())
+					 << "return " << type_str(dt)
 					 << " but it is returning "
-					 << type_str(dt) << " instead." << endl;
+					 << type_str(child[0]->get_type())
+					 << " instead." << endl;
 		}
-	}
+			}
 	void check_scope(Scope_stack* scope)
 	{
 		t_entry* t = scope->search_current_function();

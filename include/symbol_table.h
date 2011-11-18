@@ -56,6 +56,9 @@ class Symbol_table
 	t_entry* insert(t_entry* t);
 	t_entry* get_entry(string id);
 	Node* get_node(string id);
+
+	void remove(t_entry*);
+	void remove(string id);
 };
 
 
