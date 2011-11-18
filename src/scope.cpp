@@ -18,8 +18,6 @@ void Scope_level::print()
 t_entry* Scope_level::search(string id)
 {
 	unsigned size = elements.size();
-	if(elements[0] == NULL)
-		cout << "^.- "<< id << endl;
 	for(int i=0; i<size; ++i)
 		if(elements[i]->ID == id)
 			return elements[i];
