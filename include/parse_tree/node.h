@@ -3,10 +3,12 @@
 #include<iostream>
 #include<vector>
 #include "../symbol_table.h"
+#include "assert.h"
 using namespace std;
 typedef vector<t_entry*>* entry_vec;
 
 class Scope_stack;
+//#define DEBUG
 class Node
 {
 	public:

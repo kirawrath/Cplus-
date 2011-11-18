@@ -1,5 +1,6 @@
 %{
 #include <iostream>
+//#define SAVE_TOKEN yylval.tentry = new t_entry; yylval.tentry->ID = std::string(yytext, yyleng); yylval.tentry->line = yylineno
 #define SAVE_TOKEN yylval.str = new std::string(yytext, yyleng)
 #define SAVE_CHAR_TOKEN yylval.ch = yytext[1]
 #define SAVE_INT_TOKEN yylval.ival = atoi(yytext)

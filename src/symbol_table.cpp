@@ -51,7 +51,7 @@ Node* Symbol_table::get_node(string id)
 	for(int i=0; i<n; ++i)
 		if(entries[i]->ID == id)
 			return entries[i]->node;
-	cout << "Variable "<<id<<" undeclared." << endl;
+	//cout << "Variable "<<id<<" undeclared." << endl;
 
 	return new Null_node();
 }

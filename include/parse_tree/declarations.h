@@ -25,6 +25,12 @@ class Id_list : public Node
 
 		return entries;
 	}
+	void check_scope(Scope_stack* scope)
+	{
+		unsigned size = child.size();
+		for(int i=0; i<size; ++i)
+			((Var*)child[i])->build_entry();
+	}
 };
 class Var_declaration : public Node
 {
@@ -57,10 +63,7 @@ class Var_declaration : public Node
 	}
 	void check_scope(Scope_stack* scope)
 	{
-		
-		unsigned size = child.size();
-		for(int i=0; i<size; ++i)
-			child[i]->check_scope(scope);
+		child[1]->check_scope(scope);
 	}
 	vector<t_entry*>* get_entries()
 	{
@@ -81,14 +84,20 @@ class Vars_declarations : public Node
 	}
 	void check_scope(Scope_stack* scope)
 	{
+#ifdef DEBUG
+cout << "Vars_declarations::check_scope()1" << endl;
+#endif
 		unsigned size = child.size();
+		for(int i=0; i<size; ++i) // To create the entries.
+			child[i]->check_scope(scope);
+
+		// Pushing the entries to the current scope level.
 		for(int i=0; i<size; ++i)
 		{
 			entry_vec vec =
 				((Var_declaration*)child[i])->get_entries();
 			scope->push_same_level(vec);
 		}
-
 		entry_vec repeated = scope->
 			search_multiple_entries();
 		if(repeated)
@@ -96,8 +105,9 @@ class Vars_declarations : public Node
 				cout << "Error: Multiple declarations for "
 					 << repeated->at(i)->ID << "." << endl;
 
-		for(int i=0; i<size; ++i)
-			child[i]->check_scope(scope);
+#ifdef DEBUG
+cout << "Vars_declarations::check_scope()2" << endl;
+#endif
 	}
 };
 class Parameter_list : public Node
@@ -123,6 +133,12 @@ class Parameter_list : public Node
 			vec->push_back(child[i]->get_entry());
 		return vec; // May have size 0
 	}
+	void check_scope(Scope_stack* dummy)
+	{
+		unsigned size = child.size();
+		for(int i=0; i<size; ++i)
+			((Var*)child[i])->build_entry();
+	}
 };
 
 class Block : public Node
@@ -134,7 +150,7 @@ class Block : public Node
 	{
 		func_params = NULL;
 	}
-	void set_func_params(entry_vec p) // Used by Function class
+	void set_func_params(entry_vec p) // Used by Function and Iteration classes
 	{
 		func_params = p;
 	}
@@ -170,10 +186,36 @@ class Cmd_list : public Block // A one command block (used by FOR and IF)
 class Function : public Node
 {
 	t_entry* entry;
+	string id;
+	int line;
 	
 	public:
 	Function(Node* n0, Parameter_list* n1, Node* n2) : Node(n0, n1, n2)
 	{
+		entry = NULL;
+	}
+	void set_id(string idd)
+	{
+		id = idd;
+	}
+	void set_line(int l)
+	{
+		line = l;
+	}
+	int get_line()
+	{
+		return line;
+	}
+	void build_entry()
+	{
+		assert(!entry);
+		
+		entry = new t_entry;
+		entry->ID = id;
+		entry->line = line;
+		entry->node = this;
+		entry->params = (Parameter_list*)child[1];
+		entry->type = child[0]->get_type();
 	}
 	void evaluate()
 	{
@@ -181,7 +223,7 @@ class Function : public Node
 			if(child.size()<3)
 				throw get_id();
 			child[1]->evaluate();
-			child[2]->evaluate();//should check return type...
+			child[2]->evaluate();
 		}
 		catch(string s){
 			cout<<"Error while parsing function "<< s <<endl;
@@ -189,16 +231,20 @@ class Function : public Node
 	}
 	void check_scope(Scope_stack* scope)
 	{
+		build_entry();
+		// push itself into scope:
+		scope->push_same_level(get_entry());
+		child[1]->check_scope(scope); // To build the parameters entries.
 		// push param list to scope
 		entry_vec p = ((Parameter_list*)child[1])->get_entries();
 		((Block*)child[2])->set_func_params(p);
-		// push block vars to scope - Done!
-		// push if and for blocks to scope - Done!
+		// push block vars to scope
+		// push if and for blocks to scope
 		child[2]->check_scope(scope); // Block
 	}
 	string get_id()
 	{
-		return entry->ID;
+		return id;
 	}
 	data_type get_type()
 	{

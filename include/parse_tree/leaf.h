@@ -8,7 +8,7 @@ class Leaf_node : public Node
 	public:
 	data_type dt;
 	Leaf_node(){}
-	
+
 	data_type get_type()
 	{
 		return dt;
@@ -17,13 +17,13 @@ class Leaf_node : public Node
 	{
 		dt = dtt;
 	}
-	
 };
 
 class Var : public Leaf_node
 {
 	protected:
 	string id;
+	int line;
 	t_entry* entry;
 	public:
 	Var(string idd)
@@ -40,9 +40,26 @@ class Var : public Leaf_node
 		entry = t;
 		t->node = this;
 	}
+	void set_type(data_type dtt)
+	{
+		entry->type = dtt;
+	}
+	data_type get_type()
+	{
+		return entry->type;
+	}
+	void build_entry() // Called ONLY by Id_list
+	{
+		if(entry)
+			cout << "Trying to build an already existent entry!" << endl;
+		entry = new t_entry;
+		entry->ID = id;
+		entry->line = line;
+	}
+	void set_line(int l){line = l;}
 	int get_line()
 	{
-		return entry->line;
+		return line;
 	}
 	string get_id()
 	{
@@ -56,12 +73,20 @@ class Var : public Leaf_node
 	void check_scope(Scope_stack* scope)
 	{
 		if(!entry)
-			cout << "Variable "<< id << " hasn't an entry!" << endl;
-		if(scope->search(entry) != entry)
 		{
-			cout << "Error: Variable " << id
-				<< " undeclared in this scope." << endl;
+			entry = scope->search(id);
+			if(!entry)
+			{
+				cout << "Error: Variable " << id
+					 << " on line " << line
+				 	 << " undeclared in this scope." << endl;
+			}
+#ifdef DEBUG
+			else
+				cout << id << " found! (var::check_scope())"<<endl;
+#endif
 		}
+		
 	}
 };
 class Array : public Var
@@ -88,15 +113,12 @@ class Array : public Var
 	{
 		switch(dtt){
 			case IVAL:
-				dt = IARRAY;
 				entry->type = IARRAY;
 				break;
 			case CVAL:
-				dt = CARRAY;
 				entry->type = CARRAY;
 				break;
 			case LVAL:
-				dt = LARRAY;
 				entry->type = LARRAY;
 				break;
 			default:
@@ -105,7 +127,7 @@ class Array : public Var
 	}
 	data_type get_element_type()
 	{
-		switch(dt){
+		switch(entry->type){
 			case IARRAY:
 				return IVAL;
 			case CARRAY:
@@ -182,6 +204,7 @@ class Parameter : public Var
 	{
 		set_type(t->get_type());
 	}
+	
 };
 class Array_parameter : public Array
 {

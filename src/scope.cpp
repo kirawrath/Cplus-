@@ -18,6 +18,8 @@ void Scope_level::print()
 t_entry* Scope_level::search(string id)
 {
 	unsigned size = elements.size();
+	if(elements[0] == NULL)
+		cout << "^.- "<< id << endl;
 	for(int i=0; i<size; ++i)
 		if(elements[i]->ID == id)
 			return elements[i];
@@ -33,6 +35,9 @@ t_entry* Scope_level::search(t_entry* entry)
 }
 t_entry* Scope_level::get_last()
 { // Return use this
+	if(elements.size()<1)
+		cout << "Houston, we have a problem here: Scope_level::get_last()"
+			 << endl;
 	return elements.back();
 }
 vector<t_entry*>* Scope_level::search_multiple_entries(
@@ -133,7 +138,6 @@ t_entry* Scope_stack::search_current_function()
 {
 	// The current function should be the last element
 	// inserted in the GLOBAL level.
-	
 
 	t_entry* ret = level.front()->get_last();
 	if(ret->params) // Make sure it is a function

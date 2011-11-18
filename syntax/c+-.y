@@ -9,8 +9,7 @@ using namespace std;
 int yylex();
 extern "C" int yyparse();
 extern "C" FILE *yyin;
-extern int line_num;
- 
+extern int yylineno; 
 void yyerror(char *s);
 Node* root;
 Symbol_table* st;
@@ -41,6 +40,7 @@ Scope_stack* scope;
 	Type* type;
     std::string* str;
 	char ch;
+	t_entry* tentry;
 }
 
 %error-verbose
@@ -62,7 +62,7 @@ Scope_stack* scope;
 
 %type <tnode> cmm declarations declaration var_decl
 %type <tnode> fun_decl 
-%type <tnode> ID_list IDs parameter block command selection_cmd
+%type <tnode> ID_list block command selection_cmd
 %type <tnode> cmd_list cmd_list_center iteration_cmd return_cmd 
 %type <tnode> var_eq exp_num_var 
 %type <tnode> attribution
@@ -74,7 +74,7 @@ Scope_stack* scope;
 %type <ival> relational_op 
 %type <ival> mult_op sum_op 
 %type <type> type
-%type <var> var
+%type <var> var IDs parameter 
 %type <params> param_list 
 
 %start cmm
@@ -101,12 +101,12 @@ declarations:
 declaration:
 	fun_decl {
 		$$ = ($1);
-		scope->push_same_level($$->get_entry());
-		$$->check_scope(scope);
+		//scope->push_same_level($$->get_entry());
+		//$$->check_scope(scope);
 	}
 	| var_decl /* Global vars */{
 		$$ = ($1);
-		$$->check_scope(scope);
+		//$$->check_scope(scope);
 	}
 ;
 var_decl:
@@ -117,18 +117,17 @@ var_decl:
 ID_list:
        ID_list SEP IDs { $1->add_child($3); }
        | IDs {
-		$$ = new Id_list((Var*)$1); }
+			$$ = new Id_list((Var*)$1); //Id_list() is used only here!
+		}
 ;
 IDs:
 	ID {
-    	t_entry* inf = new t_entry(*$1);
     	$$ = new Var(*$1);
-    	$$->set_entry(st->insert(inf));
+		$$->set_line(yylineno);
 	}
     |ID '[' NUM ']' { 
-    	t_entry* inf = new t_entry(*$1);
 	    $$ = new Array(*$1, $3);
-    	$$->set_entry(st->insert(inf));
+		$$->set_line(yylineno);
 #ifdef DEBUG
 		cout << $1 << " " << $3 << endl;
 #endif
@@ -149,17 +148,16 @@ type:
 
 fun_decl:
 	type ID '(' param_list ')' block {
-        t_entry* inf = new t_entry(*$2);
         $$ = new Function($1, $4, $6);
-        $$->set_entry(st->insert(inf));
-		cout<<"Function "<<*($2)<<" parsed!"<<endl;
+		((Function*)$$)->set_id(*$2);
+		((Function*)$$)->set_line(yylineno);
+		cout<<"Function "<< *$2 <<" parsed!"<<endl;
     }
     | type ID '(' error ')' block {
-		cout<<"Error while parsing parameters for "<<*$2<<endl;
-        t_entry* inf = new t_entry();
-        inf->ID = *($2);
+		cout<<"Error while parsing parameters for "<< *$2 <<endl;
         $$ = new Function ($1, (Parameter_list*)new Null_node(), $6);
-        $$->set_entry(st->insert(inf));
+		((Function*)$$)->set_id(*$2);
+		((Function*)$$)->set_line(yylineno);
     }
 ;
 
@@ -171,14 +169,12 @@ param_list:
 
 parameter:
 	type ID {
-    	t_entry* inf = new t_entry(*$2);
 		$$ = new Parameter((Type*)$1, *$2);
-    	$$->set_entry(st->insert(inf));
+		$$->set_line(yylineno);
 }
 	| type ID '[' NUM ']' {
-    	t_entry* inf = new t_entry(*$2);
 		$$ = new Array_parameter($1, *$2, $4);
-    	$$->set_entry(st->insert(inf));
+		$$->set_line(yylineno);
 }
 ;
 block:
@@ -261,13 +257,7 @@ return_cmd:
 
 attribution:
 	var_eq expression {
-#ifdef DEBUG
-		cout << "Att" << endl;
-#endif
 		$$ = new Attribution($1, $2);
-#ifdef DEBUG
-		cout << "ribution!" << endl;
-#endif
 	}
 	| var_eq CHAR {
 		$$ = new Attribution($1, new Const_char($2));
@@ -327,11 +317,15 @@ exp_num_var:
 var:
 	ID
 	{
-		$$ = (Var*)st->get_node(*$1);
+		//$$ = (Var*)st->get_node(*$1);
+		$$ = new Var(*$1);
+		$$->set_line(yylineno);
 	}
     |ID '[' var ']' 
 	{
-		$$ = (Var*)st->get_node(*$1);
+		//$$ = (Var*)st->get_node(*$1);
+		$$ = new Var(*$1);
+		$$->set_line(yylineno);
 		try{
 			$$->set_indexer($3);
 		}
@@ -341,7 +335,9 @@ var:
 	}
     |ID '[' NUM ']'
 	{
-		$$ = (Var*)st->get_node(*$1);
+		//$$ = (Var*)st->get_node(*$1);
+		$$ = new Var(*$1);
+		$$->set_line(yylineno);
 		try{
 			$$->set_indexer($3);
 		}
@@ -437,7 +433,7 @@ func_call:
 	ID '(' arguments ')'{ 
 		$$ = (Expression*)st->get_node(*$1);
 		if($$->get_type() != NOTYPE)
-			$$ = (Expression*) new Function_call($3, st->get_entry(*$1));
+			$$ = (Expression*) new Function_call($3, (*$1));
 		else
 			$$ = (Expression*) new Null_node();
 	}
@@ -461,8 +457,6 @@ main(int argc, char** argv) {
 		return -1;
 	}
 	st = new Symbol_table();
-	scope = new Scope_stack();
-	scope->push_new_level(new Scope_level()); // Pushing the global scope
 	// set lex to read from it instead of defaulting to STDIN:
 	yyin = myfile;
 
@@ -476,7 +470,7 @@ main(int argc, char** argv) {
 }
 
 void yyerror(char *s) {
-	cout << "Parse error in line " << line_num << "! Message: " << s << endl;
+	cout << "Parse error in line " << yylineno << "! Message: " << s << endl;
 	// might as well halt now:
 	// exit(-1);
 }

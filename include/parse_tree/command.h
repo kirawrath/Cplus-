@@ -3,11 +3,63 @@
 #include "leaf.h"
 #include "declarations.h"
 extern int yylineno;
-class Command : Node
+class Command : public Node
 {
 	public:
 	Command(){}
 };
+class Lvalue_list : public Node
+{
+	data_type expected_type;
+	public:
+	Lvalue_list(Node* n) : Node(n)
+	{
+		expected_type = NOTYPE;
+	}
+	int get_line()
+	{
+		return ((Var*)child.back())->get_line();
+	}
+	void evaluate()
+	{
+		//There is at least one node
+		if(!child[0])
+			return;
+
+		expected_type = child[0]->get_type(); 
+
+		unsigned size = child.size();
+		for(int i=1; i<size; ++i)
+		{
+			try{
+				if(child[i]->get_type() != expected_type)
+				{
+/*				std::stringstream ss;
+				ss << "Incompatible type in assignment in line ";
+				ss << child[i]->get_line();
+				ss << " with " << child[i]->get_id() << ".";
+
+				throw ss.str();*/
+					throw "Incompatible type in assignment";
+				}
+			}
+			catch(const char* problem)
+			{
+				cout << problem << endl;
+			}
+		}
+
+	}
+	data_type get_type()
+	{
+#ifdef DEBUG
+		cout << "lvalue_list type: "<< expected_type << endl;
+#endif
+		return expected_type;
+	}
+
+};
+
 class Attribution : public Node
 {
 	bool is_array(data_type dt)
@@ -50,8 +102,11 @@ class Attribution : public Node
 			child[1]->evaluate();
 			if( ! compatible(child[0], child[1]))
 			{
-				cout<<"Incompatible types in assignment on line "
-					<< yylineno << endl;
+				cout<<"Incompatible types in assignment ("
+					<< type_str(child[0]->get_type()) << ", "
+					<< type_str(child[1]->get_type()) << ")"
+					<<" on line "
+					<< ((Lvalue_list*)child[0])->get_line() << endl;
 #ifdef DEBUG
 				cout << child[0]->get_type() << endl;
 				cout << child[1]->get_type() << endl;
@@ -68,54 +123,6 @@ class Attribution : public Node
 		}
 	}
 };
-class Lvalue_list : public Node
-{
-	data_type expected_type;
-	public:
-	Lvalue_list(Node* n) : Node(n)
-	{
-		expected_type = NOTYPE;
-	}
-
-	void evaluate()
-	{
-		//There is at least one node
-		if(!child[0])
-			return;
-
-		expected_type = child[0]->get_type(); 
-
-		unsigned size = child.size();
-		for(int i=1; i<size; ++i)
-		{
-			try{
-				if(child[i]->get_type() != expected_type)
-				{
-/*				std::stringstream ss;
-				ss << "Incompatible type in assignment in line ";
-				ss << child[i]->get_line();
-				ss << " with " << child[i]->get_id() << ".";
-
-				throw ss.str();*/
-					throw "Incompatible type in assignment";
-				}
-			}
-			catch(const char* problem)
-			{
-				cout << problem << endl;
-			}
-		}
-
-	}
-	data_type get_type()
-	{
-#ifdef DEBUG
-		cout << "lvalue_list type: "<< expected_type << endl;
-#endif
-		return expected_type;
-	}
-
-};
 class Selection : public Node
 {
 	public:
@@ -127,9 +134,15 @@ class Iteration : public Node
 	public:
 	void check_scope(Scope_stack* scope)
 	{
+#ifdef DEBUG
+cout << "Iteration::check_scope()1" << endl;
+#endif
 		unsigned size = child.size();
 		if( ! scope->search("i") ) //there is no "i" declared
 		{
+#ifdef DEBUG
+cout << "There is no \"i\" in this for yet!" << endl;
+#endif
 			t_entry* t = new t_entry("i");
 			t->type = IVAL;
 			entry_vec entries = new vector<t_entry*>;
@@ -138,6 +151,9 @@ class Iteration : public Node
 		}
 		for(int i=0; i<size; ++i)
 			child[i]->check_scope(scope);
+#ifdef DEBUG
+cout << "Iteration::check_scope()2" << endl;
+#endif
 	}
 	Iteration(Node* n0) : Node(n0){//forever
 	}
@@ -202,14 +218,20 @@ class Arguments : public Node
 class Function_call : public Node
 {
 	t_entry* func;
+	string func_id;
 	Arguments* args;
+	int line;
 	public:
-	Function_call(Arguments* arg, t_entry* function)
+	Function_call(Arguments* arg, string function)
 	{
-		func = function;
+		func_id = function;
 		args = arg;
 	}
-	void Evaluate()
+	
+	void set_line(int l){line = l;}
+	int get_line(){return line;}
+
+	void evaluate()
 	{
 		Parameter_list* params = (Parameter_list*)func->node;
 
@@ -222,6 +244,13 @@ class Function_call : public Node
 			if(params->type(i) != args->type(i))
 				throw "Incompatible types given as arguments to function";
 		}
+	}
+	void check_scope(Scope_stack* scope)
+	{
+		func = scope->search(func_id);
+		unsigned size = child.size();
+		for(int i=0; i<size; ++i)
+			child[i]->check_scope(scope);
 	}
 	string get_id()
 	{
