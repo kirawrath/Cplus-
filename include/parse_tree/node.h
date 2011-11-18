@@ -40,10 +40,6 @@ class Node
 	{
 		unsigned size = child.size();
 		try{
-			for(int i=0; i<size; ++i) //Removing NULL childs
-				if(!child[i])
-					child.erase(child.begin() + i);
-
 			for(int i=0; i<size; ++i)
 				child[i]->evaluate();
 		}

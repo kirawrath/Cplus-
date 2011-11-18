@@ -46,6 +46,8 @@ class Var : public Leaf_node
 	}
 	data_type get_type()
 	{
+		if(!entry)
+			cout << "Entry not found" << endl;
 		return entry->type;
 	}
 	void build_entry() // Called ONLY by Id_list
@@ -100,14 +102,6 @@ class Array : public Var
 		size = sizee;
 		n_indexer = NULL;
 		indexer = 0;
-	}
-	void check_scope(Scope_stack* scope)
-	{
-		if(scope->search(entry->ID) != entry)
-		{
-			cout << "Array " << id
-				<< " undeclared in this scope." << endl;
-		}
 	}
 	void set_type(data_type dtt)
 	{

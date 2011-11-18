@@ -107,10 +107,6 @@ class Attribution : public Node
 					<< type_str(child[1]->get_type()) << ")"
 					<<" on line "
 					<< ((Lvalue_list*)child[0])->get_line() << endl;
-#ifdef DEBUG
-				cout << child[0]->get_type() << endl;
-				cout << child[1]->get_type() << endl;
-#endif
 			}
 		}
 		else // Unary operator like ++ -- +-
@@ -195,6 +191,8 @@ class Return : public Node
 		t_entry* t = scope->search_current_function();
 		if(t)
 			set_type(t->type);
+		if(child.size()>0)
+			child[0]->check_scope(scope);
 	}
 };
 

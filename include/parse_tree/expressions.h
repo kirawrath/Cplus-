@@ -126,6 +126,10 @@ class Factor : public Expression
 	{
 		child[0]->evaluate();
 	}
+	void check_scope(Scope_stack* scope)
+	{
+		child[0]->check_scope(scope);
+	}
 };
 class Factorial : public Expression
 {
