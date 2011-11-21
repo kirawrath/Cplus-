@@ -128,9 +128,6 @@ IDs:
     |ID '[' NUM ']' { 
 	    $$ = new Array(*$1, $3);
 		$$->set_line(yylineno);
-#ifdef DEBUG
-		cout << $1 << " " << $3 << endl;
-#endif
 	}
 ;	
 
@@ -324,7 +321,7 @@ var:
     |ID '[' var ']' 
 	{
 		//$$ = (Var*)st->get_node(*$1);
-		$$ = new Var(*$1);
+		$$ = new Array(*$1);
 		$$->set_line(yylineno);
 		try{
 			$$->set_indexer($3);
@@ -336,7 +333,7 @@ var:
     |ID '[' NUM ']'
 	{
 		//$$ = (Var*)st->get_node(*$1);
-		$$ = new Var(*$1);
+		$$ = new Array(*$1);
 		$$->set_line(yylineno);
 		try{
 			$$->set_indexer($3);

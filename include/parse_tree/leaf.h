@@ -38,7 +38,6 @@ class Var : public Leaf_node
 	void set_entry(t_entry* t)
 	{
 		entry = t;
-		t->node = this;
 	}
 	void set_type(data_type dtt)
 	{
@@ -46,8 +45,9 @@ class Var : public Leaf_node
 	}
 	data_type get_type()
 	{
-		if(!entry)
-			cout << "Entry not found" << endl;
+		if(!entry) // This is the case when you are working with an
+				   // undeclared variable.
+			return NOTYPE; 
 		return entry->type;
 	}
 	void build_entry() // Called ONLY by Id_list
@@ -85,7 +85,8 @@ class Var : public Leaf_node
 			}
 #ifdef DEBUG
 			else
-				cout << id << " found! (var::check_scope())"<<endl;
+				cout << id << " found! Line "<<line<<" (var::check_scope())"<<endl;
+			cout << entry << endl;
 #endif
 		}
 		
@@ -97,7 +98,7 @@ class Array : public Var
 	int indexer;
 	Node* n_indexer;
 	public:
-	Array(string idd, unsigned sizee) : Var(idd)
+	Array(string idd, unsigned sizee=0) : Var(idd)
 	{
 		size = sizee;
 		n_indexer = NULL;
@@ -118,10 +119,12 @@ class Array : public Var
 			default:
 				cout << "Warning: Unknow type for array! " << dtt <<endl;
 		}
+		//cout << "Type set for " << id << " on line " << line << endl;
+		//cout << entry << endl;
 	}
 	data_type get_element_type()
 	{
-		switch(entry->type){
+		switch(get_type()){
 			case IARRAY:
 				return IVAL;
 			case CARRAY:
@@ -131,25 +134,15 @@ class Array : public Var
 		}
 		cout << "No element type!"
 			 << " My type is " << entry->type;
-			 //<< " My id is " << entry->ID << endl;
 	}
 	void set_indexer(Node* n)
 	{
-	/*	data_type t = entry->type;
-		if(t!=CARRAY && t!= LARRAY && t!=IARRAY)
-			throw "Unable to convert variable to array.";*/
 		n->evaluate(); //not sure why doing this.
 		n_indexer = n;
 	}
 	
 	void set_indexer(int i)
 	{
-		/*data_type t = entry->type;
-		if(t!=CARRAY && t!= LARRAY && t!=IARRAY)
-			throw "Unable to convert variable to array.";*/
-		if( i >= size )
-			cout << "Warning on line "<<yylineno<<": indexer for "<<entry->ID
-				<< " is higher than it's size.";
 		indexer = i;
 	}
 };

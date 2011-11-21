@@ -1,4 +1,3 @@
 Improve error output by displaying the line number and don't use yylineno anymore. (Create a function in Node to handle that)
 
 Arrays aren't well implemented yet.
-Fix char-array: Attribution should now check for compatibility of types. You can assume that ch* is ch[0].
