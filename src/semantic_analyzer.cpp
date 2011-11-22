@@ -17,7 +17,6 @@ void Semantic_analyzer::analyze()
 		scope->push_new_level(new Scope_level()); // Pushing the global scope
 		
 		root->check_scope(scope);
-		cout << "Scope checked!" << endl;
 		root->evaluate();
 	}
 	catch(string problem)
@@ -29,7 +28,7 @@ void Semantic_analyzer::analyze()
 		cout << problem << endl;
 	}
 
-	cout << endl << "Done! \\o/" << endl;
+	cout << endl << "Semantic Analysis Complete! \\o/" << endl;
 }
 
 #endif

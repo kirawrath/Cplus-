@@ -90,12 +90,11 @@ class Sum : public Aritimetic_expression
 {
 	public:
 	Sum(Expression* left, Expression* right) : Aritimetic_expression(left, right){}
-	void gen_code(ofstream& file, int& counter)
+
+	void gen_code(Code_gen* gen)
 	{
-		child_gen_code(file, counter);
-
-		file << "\tiadd\n";
-
+		child_gen_code(gen);
+		gen->write("\tiadd\n");
 	}
 };
 
@@ -103,16 +102,31 @@ class Multiplication : public Aritimetic_expression
 {
 	public:
 	Multiplication(Expression* left, Expression* right) : Aritimetic_expression(left, right){}
+	void gen_code(Code_gen* gen)
+	{
+		child_gen_code(gen);
+		gen->write("\timul\n");
+	}
 };
 class Subtraction : public Aritimetic_expression
 {
 	public:
 	Subtraction(Expression* left, Expression* right) : Aritimetic_expression(left, right){}
+	void gen_code(Code_gen* gen)
+	{
+		child_gen_code(gen);
+		gen->write("\tisub\n");
+	}
 };
 class Division : public Aritimetic_expression
 {
 	public:
 	Division(Expression* left, Expression* right) : Aritimetic_expression(left, right){}
+	void gen_code(Code_gen* gen)
+	{
+		child_gen_code(gen);
+		gen->write("\tidiv\n");
+	}
 };
 
 class Factor : public Expression

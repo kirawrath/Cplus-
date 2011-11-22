@@ -24,15 +24,16 @@ typedef struct table_entry
 {
 	std::string ID;
 	data_type type;
-	op_type op_t;
-	int line;
-	Parameter_list* params;
+	unsigned line;
 	Node* node;
+	Parameter_list* params;
+	unsigned reg; // Register
 	union{
 		long long lval;
 		char cval;
 		int ival;
 	};
+
 	table_entry()
 	{
 		params = NULL;

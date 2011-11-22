@@ -2,6 +2,8 @@
 #define CODE_GEN_CPP
 #include "../include/code_gen.h"
 #include "../include/parse_tree/node.h"
+#include <iostream>
+#include <fstream>
 using namespace std;
 
 Code_gen::Code_gen(Node* root_node)
@@ -10,39 +12,87 @@ Code_gen::Code_gen(Node* root_node)
 }
 void Code_gen::generate_file(string name)
 {
-	ofstream outfile(name.c_str(), ios::out);
+	file = new ofstream (name.c_str(), ios::out);
+	if(file->fail())
+		cout << "Fail file!" << endl;
 
-	outfile << ".class public out \n";
-	outfile << "	.super java/lang/Object \n";
-	outfile << "	.method public <init>()V \n";
-	outfile << "	aload_0 \n";
-	outfile << "	invokespecial java/lang/Object/<init>()V \n";
-	outfile << "	return \n";
-	outfile << "	.end method \n";
-
-
-	outfile << "	.method public static print(I)V\n";
-	outfile << "	.limit locals 3\n";
-	outfile << "	.limit stack 3\n";
-
-	outfile << "	iload 0\n";
-	outfile << "	getstatic java/lang/System/out Ljava/io/PrintStream; \n";
-	outfile << "	swap \n";
-	outfile << "	invokevirtual java/io/PrintStream/println(I)V   ; print x\n";
-
-	outfile << "	return\n";
-	outfile << "	.end method\n";
-	outfile << "	.method public static main([Ljava/lang/String;)V \n";
-	outfile << "	.limit stack 50 \n";
-	outfile << "	.limit locals 100 \n";
-
-	int count = 0;
-	root->gen_code(outfile, count);
+	(*file) << ".class public out " << endl;
+	(*file) << "	.super java/lang/Object " << endl;
+	(*file) << "	.method public <init>()V " << endl;
+	(*file) << "	aload_0 " << endl;
+	(*file) << "	invokespecial java/lang/Object/<init>()V " << endl;
+	(*file) << "	return " << endl;
+	(*file) << "	.end method " << endl;
 
 
-	outfile << "	invokestatic simple.print(I)V\n";
-	outfile << "	return        ; return from main\n";
-	outfile << ".end method\n";
+	(*file) << "	.method public static print(I)V" << endl;
+	(*file) << "	.limit locals 3" << endl;
+	(*file) << "	.limit stack 3" << endl;
+
+	(*file) << "	iload 0" << endl;
+	(*file) << "	getstatic java/lang/System/out Ljava/io/PrintStream; " << endl;
+	(*file) << "	swap " << endl;
+	(*file) << "	invokevirtual java/io/PrintStream/println(I)V   ; print x" << endl;
+
+	(*file) << "	return" << endl;
+	(*file) << "	.end method" << endl;
+	(*file) << "	.method public static main([Ljava/lang/String;)V " << endl;
+	(*file) << "	.limit stack 50 " << endl;
+	(*file) << "	.limit locals 100 " << endl;
+
+	reg_counter = 0;
+	root->gen_code(this);
+
+
+//	(*file) << "	invokestatic out.print(I)V" << endl;
+	(*file) << "	return        ; return from main" << endl;
+	(*file) << ".end method" << endl;
+}
+unsigned Code_gen::get_counter()
+{
+	return reg_counter;
+}
+void Code_gen::inc_counter()
+{
+	reg_counter++;
 }
 
+void Code_gen::write(string str)
+{
+	(*file) << str;
+}
+void Code_gen::write(int value)
+{
+	(*file) << value;
+}
+string Code_gen::new_label()
+{
+	static string s="A";
+	int size = s.size();
+	if(s[size-1] == 'Z')
+	{
+		bool done = false;
+		for(int i=size-2; i>=0; --i)
+		{
+			if(s[i] != 'Z')
+			{
+				s[i]++;
+				for(int j=i+1; j<size; ++j)
+					s[j] = 'A';
+				done = true;
+			}
+			if(done)
+				break;
+		}
+		if(!done)
+		{
+			for(int i=0; i<size; ++i)
+				s[i] = 'A';
+			s+='A';
+		}
+	}
+	else
+		s[size-1]++;
+	return s;
+}
 #endif

@@ -35,6 +35,14 @@ class Var : public Leaf_node
 	{
 		return entry;
 	}
+	void set_register(unsigned i)
+	{
+		entry->reg = i;
+	}
+	unsigned get_register()
+	{
+		return entry->reg;
+	}
 	void set_entry(t_entry* t)
 	{
 		entry = t;
@@ -169,9 +177,11 @@ class Const_num : public Leaf_node
 	{
 		return IVAL; // I'm a int, lol
 	}
-	void gen_code(ofstream& file, int& counter)
+	void gen_code(Code_gen* gen)
 	{
-		file << "ldc" << num << "\n";
+		gen->write("\tldc ");
+		gen->write(num);
+		gen->write("\n");
 	}
 };
 class Const_char : public Leaf_node

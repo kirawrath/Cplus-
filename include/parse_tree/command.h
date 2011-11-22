@@ -34,19 +34,40 @@ class Lvalue_list : public Node
 			try{
 				if(child[i]->get_type() != expected_type)
 				{
-/*				std::stringstream ss;
-				ss << "Incompatible type in assignment in line ";
-				ss << child[i]->get_line();
-				ss << " with " << child[i]->get_id() << ".";
-
-				throw ss.str();*/
-					throw "Incompatible type in assignment";
+					cout << "Incompatible type in assignment on line ";
+					cout << child[i]->get_line();
+					cout << ". Got " << type_str(child[i]->get_type())
+						 << " but " << type_str(expected_type) << " was expected."
+						 << endl;
 				}
 			}
 			catch(const char* problem)
 			{
 				cout << problem << endl;
 			}
+		}
+
+	}
+	void gen_code(Code_gen* gen)
+	{		
+		gen->write("\tistore ");
+	   	gen->write( gen->get_counter() );
+		gen->write("\n");
+		((Var*)child[0])->set_register(gen->get_counter());
+		gen->inc_counter();
+
+		unsigned size = child.size();
+		for(int i=1; i<size; ++i)
+		{
+			int counter = gen->get_counter();
+			gen->write("\tiload ");
+		   	gen->write(counter-1);
+			gen->write("\n");
+			gen->write("\tistore ");
+		   	gen->write(counter);
+			gen->write("\n");
+			((Var*)child[i])->set_register(gen->get_counter());
+			gen->inc_counter();
 		}
 
 	}
@@ -117,6 +138,11 @@ class Attribution : public Node
 						cout << "Error: Incompatible type for unary operator"
 							 << " on line "<< yylineno << "." << endl;
 		}
+	}
+	void gen_code(Code_gen* gen)
+	{
+		child[1]->gen_code(gen);
+		child[0]->gen_code(gen);
 	}
 };
 class Selection : public Node
@@ -259,4 +285,20 @@ class Function_call : public Node
 	}
 
 };
+
+class Print : public Node
+{
+	public:
+	Print(Var* v) : Node(v)
+	{}
+	void gen_code(Code_gen* gen)
+	{
+		int reg = ((Var*)child[0])->get_register();
+		gen->write("\tiload ");
+	   	gen->write(reg);
+	   	gen->write("\n");
+		gen->write("\tinvokestatic out.print(I)V\n");
+	}
+};
+
 #endif
