@@ -5,9 +5,8 @@
 class Semantic_analyzer
 {
 	Node* root;
-	Symbol_table* st;
 	public:
-	Semantic_analyzer(Node* tree_root, Symbol_table* t);
+	Semantic_analyzer(Node* tree_root);
 	void analyze();
 };
 #endif

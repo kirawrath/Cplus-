@@ -4,6 +4,7 @@
 #include "../include/parse_tree/all_nodes.h"
 #include "../include/semantic_analyzer.h"
 #include "../include/scope.h"
+#include "../include/code_gen.h"
 using namespace std;
 
 int yylex();
@@ -12,7 +13,6 @@ extern "C" FILE *yyin;
 extern int yylineno; 
 void yyerror(char *s);
 Node* root;
-Symbol_table* st;
 Scope_stack* scope;
 
 %}
@@ -39,6 +39,7 @@ Scope_stack* scope;
 	Arguments* arg;
 	Type* type;
     std::string* str;
+	Function_call* funccall;
 	char ch;
 	t_entry* tentry;
 }
@@ -70,7 +71,7 @@ Scope_stack* scope;
 %type <vars_declaration> var_decls
 %type <arg> arguments 
 %type <expression> sum_exp mult_exp factor expression ternary_operator
-%type <expression> func_call 
+%type <funccall> func_call 
 %type <ival> relational_op 
 %type <ival> mult_op sum_op 
 %type <type> type
@@ -428,11 +429,11 @@ factor:
 
 func_call:
 	ID '(' arguments ')'{ 
-		$$ = (Expression*)st->get_node(*$1);
+		$$ = new Function_call($3, *$1);
 		if($$->get_type() != NOTYPE)
-			$$ = (Expression*) new Function_call($3, (*$1));
+			$$ = new Function_call($3, (*$1));
 		else
-			$$ = (Expression*) new Null_node();
+			$$ = (Function_call*)new Null_node();
 	}
 ;
 
@@ -453,7 +454,6 @@ main(int argc, char** argv) {
 		cout << "I can't open file!" << endl;
 		return -1;
 	}
-	st = new Symbol_table();
 	// set lex to read from it instead of defaulting to STDIN:
 	yyin = myfile;
 
@@ -462,8 +462,11 @@ main(int argc, char** argv) {
 	} while (!feof(yyin));
 	
 	delete scope;
-	Semantic_analyzer* sa = new Semantic_analyzer(root, st);
+	Semantic_analyzer* sa = new Semantic_analyzer(root);
 	sa->analyze();
+
+	Code_gen cg(root);
+	cg.generate_file();
 }
 
 void yyerror(char *s) {

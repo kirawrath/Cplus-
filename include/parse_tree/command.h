@@ -224,6 +224,7 @@ class Function_call : public Node
 	{
 		func_id = function;
 		args = arg;
+		func = NULL;
 	}
 	
 	void set_line(int l){line = l;}
@@ -246,13 +247,15 @@ class Function_call : public Node
 	void check_scope(Scope_stack* scope)
 	{
 		func = scope->search(func_id);
+		if(!func)
+			cout << "Function " << func_id << "undeclared in this scope\n";
 		unsigned size = child.size();
 		for(int i=0; i<size; ++i)
 			child[i]->check_scope(scope);
 	}
 	string get_id()
 	{
-		return func->ID;
+		return func_id;
 	}
 
 };

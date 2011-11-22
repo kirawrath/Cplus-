@@ -5,10 +5,9 @@
 #include "../include/symbol_table.h"
 #include "../include/scope.h"
 
-Semantic_analyzer::Semantic_analyzer(Node* tree_root, Symbol_table* t)
+Semantic_analyzer::Semantic_analyzer(Node* tree_root)
 {
 	root = tree_root;
-	st = t;
 }
 void Semantic_analyzer::analyze()
 {

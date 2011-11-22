@@ -169,6 +169,10 @@ class Const_num : public Leaf_node
 	{
 		return IVAL; // I'm a int, lol
 	}
+	void gen_code(ofstream& file, int& counter)
+	{
+		file << "ldc" << num << "\n";
+	}
 };
 class Const_char : public Leaf_node
 {

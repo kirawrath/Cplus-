@@ -4,6 +4,7 @@
 #include<vector>
 #include "../symbol_table.h"
 #include "assert.h"
+#include <fstream>
 using namespace std;
 typedef vector<t_entry*>* entry_vec;
 
@@ -115,5 +116,20 @@ class Node
 			delete child[i];
 		delete this;
 	}
+	virtual void gen_code(ofstream& file, int& temp_counter)
+	{
+		/* Do nothing */
+		
+		int size = child.size();
+		for(int i=0; i<size; ++i)
+			child[i]->gen_code(file, temp_counter);
+	}
+	void child_gen_code(ofstream& file, int& temp_counter)
+	{
+		int size = child.size();
+		for(int i=0; i<size; ++i)
+			child[i]->gen_code(file, temp_counter);
+	}
+
 };
 #endif

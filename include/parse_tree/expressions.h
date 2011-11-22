@@ -90,6 +90,13 @@ class Sum : public Aritimetic_expression
 {
 	public:
 	Sum(Expression* left, Expression* right) : Aritimetic_expression(left, right){}
+	void gen_code(ofstream& file, int& counter)
+	{
+		child_gen_code(file, counter);
+
+		file << "\tiadd\n";
+
+	}
 };
 
 class Multiplication : public Aritimetic_expression
