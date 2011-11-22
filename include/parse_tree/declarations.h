@@ -345,7 +345,16 @@ class Function : public Node
 	{
 		if(get_id() == "main")
 		{
+			gen->write("	.method public static main([Ljava/lang/String;)V\n");
+			gen->write("	.limit stack 50\n");
+			gen->write("	.limit locals 100\n");
+			gen->write("; -------Main Body----------- ;\n\n");
+
 			child_gen_code(gen);
+
+			gen->write("; -------Main Body End------- ;\n");
+			gen->write("	return        ; return from main\n");
+			gen->write(".end ", "method");
 			return;
 		}
 

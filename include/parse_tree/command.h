@@ -450,5 +450,17 @@ class Print : public Node
 		gen->write("\tinvokestatic out.print(I)V\n");
 	}
 };
+class Read : public Node
+{
+	public:
+	Read(Var* v) : Node(v)
+	{}
+	void gen_code(Code_gen* gen)
+	{
+		int reg = ((Var*)child[0])->get_register();
+		gen->write("\tinvokestatic out.read()I\n");
+		gen->write("\tistore ", reg);
+	}
+};
 
 #endif

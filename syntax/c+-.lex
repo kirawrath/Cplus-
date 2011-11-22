@@ -31,6 +31,7 @@ if               { return IF; }
 else             { return ELSE; }
 return           { return RETURN; }
 print            { return PRINT; }
+read             { return READ; }
 (\'.\')		{ SAVE_CHAR_TOKEN; return CHAR; }
 [a-z_A-Z][a-z_A-Z0-9]*    { SAVE_TOKEN; return ID;}
 

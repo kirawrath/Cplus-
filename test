@@ -25,4 +25,11 @@ int main()
 
 	y = 5!;
 	print y;
+
+	z = (y>200) ? 3 : 4;
+	print z;
+
+	read x;
+	print x;
+	
 }

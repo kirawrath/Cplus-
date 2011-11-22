@@ -53,6 +53,7 @@ Scope_stack* scope;
 %token FOR FOREVER
 %token IF ELSE
 %token PRINT
+%token READ
 %token RETURN
 %token <ch> CHAR
 %token <str> ID
@@ -70,6 +71,7 @@ Scope_stack* scope;
 %type <tnode> var_eq exp_num_var 
 %type <tnode> attribution
 %type <tnode> print
+%type <tnode> read
 
 %type <vars_declaration> var_decls
 %type <arg> arguments 
@@ -202,6 +204,7 @@ command:
 	| return_cmd ENDI {$$ = ($1);}
 	| func_call ENDI {$$ = ($1);}
 	| print ENDI {$$ = $1;}
+	| read ENDI {$$ = $1;}
 	| ENDI {$$ = new Null_node();}
     | error ENDI {$$ = new Null_node();
 #ifdef DEBUG
@@ -213,6 +216,10 @@ print:
 	 PRINT var {$$ = new Print($2);}
 	 | PRINT '(' var ')' {$$ = new Print($3);}
 ;
+read:
+	READ var {$$ = new Read($2);}
+	| READ '(' var ')' {$$ = new Read($3);}
+	
 selection_cmd:
 	IF '(' expression ')' cmd_list {$$ = new Selection($3, $5);}
 	| IF '(' expression ')' cmd_list ELSE cmd_list {$$ = new Selection($3, $5, $7);}

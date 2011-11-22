@@ -23,29 +23,56 @@ void Code_gen::generate_file(string name)
 	(*file) << "	invokespecial java/lang/Object/<init>()V " << endl;
 	(*file) << "	return " << endl;
 	(*file) << "	.end method " << endl;
-
+	/*********** PRINT ************/
 	(*file) << "	.method public static print(I)V" << endl;
 	(*file) << "	.limit locals 3" << endl;
 	(*file) << "	.limit stack 3" << endl;
-
 	(*file) << "	iload 0" << endl;
 	(*file) << "	getstatic java/lang/System/out Ljava/io/PrintStream; " << endl;
 	(*file) << "	swap " << endl;
 	(*file) << "	invokevirtual java/io/PrintStream/println(I)V   ; print x" << endl;
-
 	(*file) << "	return" << endl;
 	(*file) << "	.end method" << endl;
-	(*file) << "	.method public static main([Ljava/lang/String;)V " << endl;
-	(*file) << "	.limit stack 50 " << endl;
-	(*file) << "	.limit locals 100 " << endl;
-	(*file) << "; --------------------------- ;" << endl;
+
+
+	/*********** READ ************/
+	(*file) << ".method public static read()I" << endl;
+	(*file) << "	.limit locals 10 " << endl;
+	(*file) << "	.limit stack 10 " << endl;
+	(*file) << "	ldc 0 " << endl;
+	(*file) << "	istore 1  ; this will hold our final integer " << endl;
+	(*file) << "	Label1: " << endl;
+	(*file) << "	getstatic java/lang/System/in Ljava/io/InputStream; " << endl;
+	(*file) << "invokevirtual java/io/InputStream/read()I " << endl;
+	(*file) << "	istore 2 " << endl;
+	(*file) << "	iload 2 " << endl;
+	(*file) << "	ldc 10   ; the newline delimiter " << endl;
+	(*file) << "	isub " << endl;
+	(*file) << "	ifeq Label2 " << endl;
+	(*file) << "	iload 2 " << endl;
+	(*file) << "	ldc 32   ; the space delimiter " << endl;
+	(*file) << "	isub " << endl;
+	(*file) << "	ifeq Label2 " << endl;
+	(*file) << "	iload 2 " << endl;
+	(*file) << "	ldc 48   ; we have our digit in ASCII, have to subtract it from 48 " << endl;
+	(*file) << "	isub " << endl;
+	(*file) << "	ldc 10 " << endl;
+	(*file) << "	iload 1 " << endl;
+	(*file) << "	imul " << endl;
+	(*file) << "	iadd " << endl;
+	(*file) << "	istore 1 " << endl;
+	(*file) << "	goto Label1 " << endl;
+	(*file) << "	Label2: " << endl;
+	(*file) << "	;when we come here we have our integer computed in Local Variable 1 " << endl;
+	(*file) << "	iload 1 " << endl;
+	(*file) << "	ireturn " << endl;
+	(*file) << "	.end method " << endl;
+
+	/*******************************************************/
 
 	reg_counter = 0;
 	root->gen_code(this);
 
-	(*file) << "; --------------------------- ;" << endl;
-	(*file) << "	return        ; return from main" << endl;
-	(*file) << ".end method" << endl;
 }
 unsigned Code_gen::get_counter()
 {

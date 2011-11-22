@@ -45,6 +45,22 @@ class Ternary_operator : public Expression
 		evaluate();
 		return type;
 	}		
+	void gen_code(Code_gen* gen)
+	{
+		gen->write("; --- Ternary Operator Begin ---;\n");
+		string l = gen->new_label();
+		string l2 = gen->new_label();
+		child[0]->gen_code(gen);
+		gen->write("\tifeq ", l);
+		child[1]->gen_code(gen);
+		gen->write("goto ", l2);
+
+		gen->write(l, ":");//else
+		child[2]->gen_code(gen);
+		gen->write(l2, ":");
+		
+		gen->write("; --- Ternary Operator End ---;\n");
+	}
 };
 
 class Relational_expression : public Expression
