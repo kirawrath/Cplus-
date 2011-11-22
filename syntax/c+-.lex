@@ -14,7 +14,7 @@ int line_num = 1;
 %%
 [ \t]          ;
 \n				{ ++line_num; }
--?[ \t]*[0-9]+  { SAVE_INT_TOKEN; return NUM; }
+[0-9]+  { SAVE_INT_TOKEN; return NUM; }
 
 
 \/\*              { BEGIN(COMMENTS); }
@@ -35,11 +35,11 @@ print            { return PRINT; }
 [a-z_A-Z][a-z_A-Z0-9]*    { SAVE_TOKEN; return ID;}
 
 \+  { return PLUS; }
--   { return MINUS; }
+\-  { return MINUS; }
 \*  { return MULT; }
 \/  { return DIV; } 
 \<  { return SMALLER; }
->   { return GREATER;}
+\>   { return GREATER;}
 ==  { return EQ;}
 !=  { return DIFF;}
 ,   { return SEP;}

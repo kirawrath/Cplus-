@@ -28,7 +28,7 @@ void Semantic_analyzer::analyze()
 		cout << problem << endl;
 	}
 
-	cout << endl << "Semantic Analysis Complete! \\o/" << endl;
+	cout << "Semantic Analysis Complete! \\o/" << endl;
 }
 
 #endif

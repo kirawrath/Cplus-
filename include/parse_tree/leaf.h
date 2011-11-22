@@ -38,6 +38,10 @@ class Var : public Leaf_node
 	void set_register(unsigned i)
 	{
 		entry->reg = i;
+#ifdef DEBUG
+		cout << "Register "<< get_register()
+			 <<" set for " << id << endl;
+#endif
 	}
 	unsigned get_register()
 	{
@@ -61,7 +65,8 @@ class Var : public Leaf_node
 	void build_entry() // Called ONLY by Id_list
 	{
 		if(entry)
-			cout << "Trying to build an already existent entry!" << endl;
+			cout << "Trying to build an already existent entry for "
+				 << id << '.' << endl;
 		entry = new t_entry;
 		entry->ID = id;
 		entry->line = line;
@@ -101,7 +106,7 @@ class Var : public Leaf_node
 	}
 	void gen_code(Code_gen* gen)
 	{
-		gen->write("iload ");
+		gen->write("\tiload ");
 		gen->write(get_register());
 		gen->write("\n");
 	}

@@ -79,16 +79,23 @@ class Var_declaration : public Node
 			case IVAL:
 				for(int i=0; i<size; ++i)
 				{	
-					gen->write("\tldc 0\n");
+					//gen->write("\tldc 0\n");
 					int n = gen->get_counter();
-					gen->write("\tistore ");
+					//gen->write("\tistore ");
+					//gen->write(n);
+					//gen->write(" ; initializing with zero\n");
+					gen->write("\t; register ");
 					gen->write(n);
-					gen->write(" ; initializing with zero\n");
+					gen->write(" set to ", ids->child[i]->get_id());
 					((Var*)ids->child[i])->set_register(n);
 					gen->inc_counter();
 				}
 				break;
 		}
+	}
+	void set_registers(Code_gen* gen)
+	{
+		gen_code(gen);
 	}
 };
 
@@ -128,6 +135,12 @@ cout << "Vars_declarations::check_scope()1" << endl;
 cout << "Vars_declarations::check_scope()2" << endl;
 #endif
 	}
+	void set_registers(Code_gen* gen)
+	{
+		int size = child.size();
+		for(int i=0; i<size; ++i)
+			((Var_declaration*)child[i])->set_registers(gen);
+	}
 };
 class Parameter_list : public Node
 {
@@ -142,6 +155,8 @@ class Parameter_list : public Node
 	}
 	data_type type(int i)
 	{
+		if(i>=child.size())
+			return NOTYPE;
 		return child[i]->get_type();
 	}
 	vector<t_entry*>* get_entries()
@@ -192,6 +207,21 @@ class Block : public Node
 #ifdef DEBUG
 		cout << "Block::check_scope()2" << endl;
 #endif
+	}
+	void declare_var(Var* v) // Iteration use this due the implicit i.
+	{
+		Type* type = new Type(IVAL);
+		Id_list* il = new Id_list(v);
+		Var_declaration* vd = new Var_declaration(type, il);
+		child[0]->add_child(vd);
+	}
+	void set_registers(Code_gen* gen)
+	{
+		((Vars_declarations*)child[0])->set_registers(gen);
+	}
+	void gen_cmd_code(Code_gen* gen)
+	{
+		child[1]->gen_code(gen);
 	}
 };
 class Cmd_list : public Block // A one command block (used by FOR and IF)
@@ -292,6 +322,63 @@ class Function : public Node
 	t_entry* get_entry()
 	{
 		return entry;
+	}
+	private:
+	string type_code(data_type dt)
+	{
+		switch(dt)
+		{
+			case IVAL:
+			case LVAL:
+				return "I";
+			case CVAL:
+				return "Ljava/lang/String;";
+			case CARRAY:
+				return "[Ljava/lang/String;";
+			case IARRAY:
+			case LARRAY:
+				return "[I";
+		}
+	}
+	public:
+	void gen_code(Code_gen* gen)
+	{
+		if(get_id() == "main")
+		{
+			child_gen_code(gen);
+			return;
+		}
+
+		string tp = "";
+		Parameter_list* param = (Parameter_list*)child[1];
+
+		gen->write(".method public static "+get_id()+"(");
+		
+		data_type t;
+		for(int i=0; (t = param->type(i)) != NOTYPE; ++i)
+			tp += type_code(t);
+
+		gen->write(tp);
+		tp = type_code(get_type());
+		gen->write(")", tp);
+
+		gen->write(".limit locals ", 30);
+		gen->write(".limit stack ", 30);
+		
+		for(int i=0; (t = param->type(i)) != NOTYPE; ++i)
+		{
+			if(t==IVAL || t==LVAL)
+			{
+				gen->write("iload ", i);
+			}
+			else
+			{
+				cout << "Type unsuported for parameter" << endl;
+				break;
+			}
+		}
+
+		child_gen_code(gen);
 	}
 };
 #endif

@@ -17,6 +17,7 @@ class Code_gen
 	void inc_counter();
 	string new_label();
 	void write(string);
+	void write(string, string);
 	void write(int);
 	void write(string,int);
 };

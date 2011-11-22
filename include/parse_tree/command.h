@@ -79,6 +79,7 @@ class Lvalue_list : public Node
 
 class Attribution : public Node
 {
+	op_type op;
 	bool is_array(data_type dt)
 	{
 		if(dt == CARRAY || dt == LARRAY || dt == IARRAY)
@@ -107,6 +108,7 @@ class Attribution : public Node
 	public:
 	Attribution(Node* n0, op_type op_t) : Node(n0)// Unary
 	{
+		op = op_t;
 	}
 	Attribution(Node* n0, Node* n1) : Node(n0,n1) //Binary
 	{
@@ -137,8 +139,46 @@ class Attribution : public Node
 	}
 	void gen_code(Code_gen* gen)
 	{
-		child[1]->gen_code(gen);
-		child[0]->gen_code(gen);
+		if(child.size() > 1)
+		{
+			child[1]->gen_code(gen);
+			child[0]->gen_code(gen);
+		}
+		else // Unary
+		{
+			Var* c = (Var*)child[0];
+			int r = c->get_register();
+			switch(op)
+			{
+				case INCL:
+				case INCR:
+					c->gen_code(gen);
+					gen->write("ldc 1\n");
+					gen->write("iadd\n");
+					gen->write("istore ", r);
+					break;
+				case DECL:
+				case DECR:
+					c->gen_code(gen);
+					gen->write("ldc 1\n");
+					gen->write("isub\n");
+					gen->write("istore ", r);
+					break;
+				case OITOKL:
+				case OITOKR:
+					string l1 = gen->new_label(),
+						   l2 = gen->new_label();
+					c->gen_code(gen);
+					gen->write("ldc 8000\n");
+					gen->write("isub\n");
+					gen->write("ifgt " + l1 + "\n");															
+					gen->write("ldc 0\n");
+					gen->write("goto " + l2 + "\n");
+					gen->write(l1 + ":" + "\n");
+					gen->write("ldc 1\n");
+					gen->write(l2 + ":" + "\n");
+			}
+		}
 	}
 };
 class Selection : public Node
@@ -170,6 +210,7 @@ class Selection : public Node
 };
 class Iteration : public Node
 {
+	Var* v;
 	public:
 	void check_scope(Scope_stack* scope)
 	{
@@ -179,14 +220,17 @@ cout << "Iteration::check_scope()1" << endl;
 		unsigned size = child.size();
 		if( ! scope->search("i") ) //there is no "i" declared
 		{
-#ifdef DEBUG
-cout << "There is no \"i\" in this for yet!" << endl;
-#endif
-			t_entry* t = new t_entry("i");
+			/*t_entry* t = new t_entry("i");
 			t->type = IVAL;
 			entry_vec entries = new vector<t_entry*>;
 			entries->push_back(t);
 			((Block*)child[size-1])->set_func_params(entries);
+			*/
+
+			//Declaring a Var to hold 'i'.
+			v = new Var("i");
+			v->set_line(0);
+			((Block*)child[size-1])->declare_var(v);
 		}
 		for(int i=0; i<size; ++i)
 			child[i]->check_scope(scope);
@@ -195,10 +239,99 @@ cout << "Iteration::check_scope()2" << endl;
 #endif
 	}
 	Iteration(Node* n0) : Node(n0){//forever
+		v = NULL;
 	}
-	Iteration(Node* n0, Node* n1) : Node(n0,n1){
+	Iteration(Node* n0, Node* n1) : Node(n0,n1){ // for var
+		v = NULL;
 	}
 	Iteration(Node* n0, Node* n1, Node* n2, Node* n3) : Node(n0,n1,n2,n3){
+		v = NULL;
+	}
+	void gen_code(Code_gen* gen)
+	{
+		unsigned size = child.size();
+		string l = gen->new_label();
+		unsigned reg; // Register number will be ready only
+					  // when the block code is generated!
+
+		((Block*)child[size-1])->set_registers(gen);
+		if(v)
+			reg = v->get_register();
+		switch(size)
+		{
+			case 1:
+			{
+				if(v){
+					gen->write("\tldc 0\n");
+					gen->write("\tistore ", reg);
+				}
+				gen->write(l + ":" + "\n");
+				((Block*)child[0])->gen_code(gen);
+				if(v){
+					gen->write("\t; ++i\n");
+					gen->write("\tldc 1\n");
+					gen->write("\tiload ", reg);
+					gen->write("\tiadd\n");
+					gen->write("\tistore ", reg);
+				}
+				gen->write("goto " + l + "\n");
+				break;
+			}
+			case 2:
+			{
+				if(v){
+					gen->write("\tldc 0\n");
+					gen->write("\tistore ", reg);
+				}
+				else
+					cout << "Warning: It is impossible to use this structure "
+						 << "in a FOR statement with an \"i\" variable declared.\n";
+				string l2 = gen->new_label();
+
+				gen->write(l + ":" + "\n");
+				child[0]->gen_code(gen);
+				gen->write("\tiload ", reg);
+				gen->write("\tisub\n");
+				gen->write("\tifle " + l2 + "\n");
+				((Block*)child[1])->gen_cmd_code(gen);
+				if(v){
+					gen->write("\t; ++i\n");
+					gen->write("\tldc 1\n");
+					gen->write("\tiload ", reg);
+					gen->write("\tiadd\n");
+					gen->write("\tistore ", reg);
+				}
+				gen->write("\tgoto " + l + "\n");
+				gen->write(l2 + ":" + "\n");
+				break;
+			}
+			case 4:
+			{
+				string l2 = gen->new_label();
+				if(v){
+					gen->write("\tldc 0\n");
+					gen->write("\tistore ", reg);
+				}
+				child[0]->gen_code(gen);
+				gen->write(l + ":" + "\n");
+				child[1]->gen_code(gen);
+				gen->write("ifeq " + l2 + "\n");
+				((Block*)child[3])->gen_cmd_code(gen);
+				gen->write("\t; for(;;exp)\n");
+				child[2]->gen_code(gen);
+
+				if(v){
+					gen->write("\t; ++i\n");
+					gen->write("\tldc 1 ; Increment implicit i.\n");
+					gen->write("\tiload ", reg);
+					gen->write("\tiadd\n");
+					gen->write("\tistore ", reg);
+				}
+				gen->write("goto " + l + "\n");
+				gen->write(l2 + ":" + "\n");
+				break;
+			}
+		}
 	}
 };
 class Return : public Node

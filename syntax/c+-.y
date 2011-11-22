@@ -42,6 +42,7 @@ Scope_stack* scope;
 	Function_call* funccall;
 	char ch;
 	t_entry* tentry;
+	relational_type rel;
 }
 
 %error-verbose
@@ -74,7 +75,7 @@ Scope_stack* scope;
 %type <arg> arguments 
 %type <expression> sum_exp mult_exp factor expression ternary_operator
 %type <funccall> func_call 
-%type <ival> relational_op 
+%type <rel> relational_op 
 %type <ival> mult_op sum_op 
 %type <type> type
 %type <var> var IDs parameter 
@@ -85,9 +86,11 @@ Scope_stack* scope;
 cmm:
 	declarations {
 		root = new Node($1);
+#ifdef DEBUG
 		cout<< "/------------------------\\"<<endl;
 		cout<< "| Creating the root node |" <<endl;
 		cout<< "\\------------------------/"<<endl;
+#endif
 	}
 	|/* empty program */ {root = new Node();}
 ;
@@ -354,19 +357,19 @@ var:
 
 relational_op:
 	GREATER {
-		$$ = $1;
+		$$ = GR;
 	}
     |SMALLER {
-		$$ = $1;
+		$$ = SM;
 	}
     |EQ {
-		$$ = $1;
+		$$ = EQU;
 	}
     |DIFF {
-		$$ = $1;
+		$$ = DIF;
 	}
     |AND {
-		$$ = $1;
+		$$ = ND;
 	}
 ;
 
@@ -379,11 +382,11 @@ sum_exp:
 			$$ = new Sum($1, $3);
 		else if ($2 == 2)
 			$$ = new Subtraction($1, $3);
+//#ifdef DEBUG
 		else{
-#ifdef DEBUG
 			cout << "Error evaluating sum expression (c+-.y : sum_exp)" << endl;
-#endif
 		}
+//#endif
 	}
 ;
 sum_op:
@@ -396,10 +399,10 @@ mult_exp:
 			$$ = new Multiplication($1, $3);
 		else if($2==2)
 			$$ = new Division($1, $3);
+//#ifdef DEBUG
 		else
-#ifdef DEBUG
 			cout << "Error evaluating multiplication expression" << endl;
-#endif
+//#endif
 	}
 	| factor {$$ = $1;}
 ;
@@ -466,13 +469,15 @@ main(int argc, char** argv) {
 	do {
 		yyparse();
 	} while (!feof(yyin));
-	
+	cout << "Syntatic analysis complete!" << endl;
 	delete scope;
 	Semantic_analyzer* sa = new Semantic_analyzer(root);
 	sa->analyze();
 
+#ifndef NO_CODE
 	Code_gen cg(root);
 	cg.generate_file();
+#endif
 }
 
 void yyerror(char *s) {

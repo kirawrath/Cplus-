@@ -20,6 +20,11 @@ enum data_type
 	IARRAY, LARRAY, CARRAY,
 	NOTYPE=-1 //Null_node type
 };
+enum relational_type
+{
+	GR, SM, EQU, DIF, ND
+};
+
 typedef struct table_entry
 {
 	std::string ID;

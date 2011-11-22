@@ -1,3 +1,1 @@
-Improve error output by displaying the line number and don't use yylineno anymore. (Create a function in Node to handle that)
 
-Arrays aren't well implemented yet.

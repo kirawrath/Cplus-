@@ -24,7 +24,6 @@ void Code_gen::generate_file(string name)
 	(*file) << "	return " << endl;
 	(*file) << "	.end method " << endl;
 
-
 	(*file) << "	.method public static print(I)V" << endl;
 	(*file) << "	.limit locals 3" << endl;
 	(*file) << "	.limit stack 3" << endl;
@@ -39,12 +38,12 @@ void Code_gen::generate_file(string name)
 	(*file) << "	.method public static main([Ljava/lang/String;)V " << endl;
 	(*file) << "	.limit stack 50 " << endl;
 	(*file) << "	.limit locals 100 " << endl;
+	(*file) << "; --------------------------- ;" << endl;
 
 	reg_counter = 0;
 	root->gen_code(this);
 
-
-//	(*file) << "	invokestatic out.print(I)V" << endl;
+	(*file) << "; --------------------------- ;" << endl;
 	(*file) << "	return        ; return from main" << endl;
 	(*file) << ".end method" << endl;
 }
@@ -60,6 +59,10 @@ void Code_gen::inc_counter()
 void Code_gen::write(string str)
 {
 	(*file) << str;
+}
+void Code_gen::write(string str1, string str2)
+{
+	(*file) << str1 << str2 << endl;
 }
 void Code_gen::write(int value)
 {

@@ -55,6 +55,8 @@ class Node
 
 	Node* get_child(int i)
 	{
+		if(i>=child.size())
+			return NULL;
 		return child[i];
 	}
 	// Now a lot of overloads!

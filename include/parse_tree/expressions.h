@@ -49,9 +49,9 @@ class Ternary_operator : public Expression
 
 class Relational_expression : public Expression
 {
-	int op;
+	relational_type op;
 	public:
-	Relational_expression(Expression* s0, Expression* s1, int op)
+	Relational_expression(Expression* s0, Expression* s1, relational_type op)
 	{
 		add_child(s0); add_child(s1);
 		this->op = op;
@@ -59,6 +59,39 @@ class Relational_expression : public Expression
 	data_type get_type()
 	{
 		return IVAL; // Boolean is int.
+	}
+	void gen_code(Code_gen* gen)
+	{
+		string l1 = gen->new_label(),
+			   l2 = gen->new_label();
+		child[0]->gen_code(gen);
+		child[1]->gen_code(gen);
+		if(op==ND)
+		{
+			gen->write("iand\n");
+			return;
+		}
+		gen->write("isub\n");
+		switch(op)
+		{
+			case GR:
+				gen->write("ifgt " + l1 + "\n");
+				break;
+			case SM:
+				gen->write("iflt " + l1 + "\n");
+				break;
+			case EQU:
+				gen->write("ifeq " + l1 + "\n");
+				break;
+			case DIF:
+				gen->write("ifne " + l1 + "\n");
+				break;
+		}
+		gen->write("ldc 0\n");
+		gen->write("goto ", l2);
+		gen->write(l1, ":");
+		gen->write("ldc 1\n");
+		gen->write(l2, ":");
 	}
 };
 class Aritimetic_expression : public Expression
@@ -168,6 +201,33 @@ class Factorial : public Expression
 		data_type dt = child[0]->get_type();
 		if(dt != IVAL && dt != LVAL)
 			throw "Incompatible type for factorial";
+	}
+	void gen_code(Code_gen* gen)
+	{
+		gen->write("; --- Factorial Begin --- ;\n");
+		int i = gen->get_counter();
+		int ret = i+1;
+		string l;
+
+		child[0]->gen_code(gen);
+		gen->write("\tistore ", i);
+		gen->write("\tldc ", 1);
+		gen->write("\tistore ", ret);
+
+		gen->write(l=gen->new_label(), ":");
+		gen->write("\tiload ", i);
+		gen->write("\tiload ", ret);
+		gen->write("\timul\n");
+		gen->write("\tistore ", ret);
+		gen->write("\tiload ", i);
+		gen->write("\tldc ", 1);
+		gen->write("\tisub\n");
+		gen->write("\tistore ", i);
+		gen->write("\tiload ", i);
+		gen->write("ifne ", l);
+
+		gen->write("\n\tiload ", ret);
+		gen->write("; --- Factorial End --- ;\n");
 	}
 };
 #endif
