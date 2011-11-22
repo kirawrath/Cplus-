@@ -50,26 +50,22 @@ class Lvalue_list : public Node
 	}
 	void gen_code(Code_gen* gen)
 	{		
+		int n = ((Var*)child[0])->get_register();
 		gen->write("\tistore ");
-	   	gen->write( gen->get_counter() );
+	   	gen->write( n );
 		gen->write("\n");
-		((Var*)child[0])->set_register(gen->get_counter());
-		gen->inc_counter();
 
 		unsigned size = child.size();
 		for(int i=1; i<size; ++i)
 		{
-			int counter = gen->get_counter();
 			gen->write("\tiload ");
-		   	gen->write(counter-1);
+		   	gen->write(n);
 			gen->write("\n");
 			gen->write("\tistore ");
-		   	gen->write(counter);
+			n = ((Var*)child[i])->get_register();
+		   	gen->write( n );
 			gen->write("\n");
-			((Var*)child[i])->set_register(gen->get_counter());
-			gen->inc_counter();
 		}
-
 	}
 	data_type get_type()
 	{
@@ -150,6 +146,27 @@ class Selection : public Node
 	public:
 	Selection(Expression* n0, Node* n1) : Node(n0,n1){}
 	Selection(Expression* n0, Node* n1, Node* n2) : Node(n0,n1,n2){}
+
+	void gen_code(Code_gen* gen)
+	{
+		child[0]->gen_code(gen);
+		string l = gen->new_label();
+
+		gen->write("\tifeq " + l + "\n");
+		child[1]->gen_code(gen);
+		if(child.size()<=2) // if expression
+		{
+			gen->write("\t" + l + ":" + "\n");
+		}
+		else //if expression else expression
+		{
+			string end = gen->new_label();
+			gen->write("\tgoto " + end + "\n");
+			gen->write(l + ":" + "\n");
+			child[2]->gen_code(gen);
+			gen->write(end + ":" + "\n");
+		}
+	}
 };
 class Iteration : public Node
 {

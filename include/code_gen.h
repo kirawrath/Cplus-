@@ -18,6 +18,7 @@ class Code_gen
 	string new_label();
 	void write(string);
 	void write(int);
+	void write(string,int);
 };
 
 #endif

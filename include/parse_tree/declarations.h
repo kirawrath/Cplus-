@@ -70,7 +70,26 @@ class Var_declaration : public Node
 		Id_list* idl = (Id_list*)child[1];
 		return idl->entries();
 	}
-
+	void gen_code(Code_gen* gen)
+	{
+		Id_list* ids = (Id_list*) child[1];
+		unsigned size = ids->child.size();
+		switch(dt)
+		{
+			case IVAL:
+				for(int i=0; i<size; ++i)
+				{	
+					gen->write("\tldc 0\n");
+					int n = gen->get_counter();
+					gen->write("\tistore ");
+					gen->write(n);
+					gen->write(" ; initializing with zero\n");
+					((Var*)ids->child[i])->set_register(n);
+					gen->inc_counter();
+				}
+				break;
+		}
+	}
 };
 
 class Vars_declarations : public Node

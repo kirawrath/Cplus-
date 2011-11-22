@@ -65,6 +65,10 @@ void Code_gen::write(int value)
 {
 	(*file) << value;
 }
+void Code_gen::write(string str, int value)
+{
+	(*file) << str << value << endl;
+}
 string Code_gen::new_label()
 {
 	static string s="A";

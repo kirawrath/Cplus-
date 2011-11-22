@@ -99,6 +99,12 @@ class Var : public Leaf_node
 		}
 		
 	}
+	void gen_code(Code_gen* gen)
+	{
+		gen->write("iload ");
+		gen->write(get_register());
+		gen->write("\n");
+	}
 };
 class Array : public Var
 {
