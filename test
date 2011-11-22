@@ -1,4 +1,10 @@
-
+int f()
+{
+	int x;
+	read x;
+	x = x*x;
+	return x;
+}
 int main()
 {
 	int x, y, z;
@@ -29,7 +35,8 @@ int main()
 	z = (y>200) ? 3 : 4;
 	print z;
 
-	read x;
-	print x;
-	
+
+	z = f();
+	print z;
+
 }

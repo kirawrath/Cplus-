@@ -353,7 +353,7 @@ class Function : public Node
 			child_gen_code(gen);
 
 			gen->write("; -------Main Body End------- ;\n");
-			gen->write("	return        ; return from main\n");
+			gen->write("	return    ; return from main\n");
 			gen->write(".end ", "method");
 			return;
 		}
@@ -388,6 +388,9 @@ class Function : public Node
 		}
 
 		child_gen_code(gen);
+
+		//gen->write("\tireturn\n");
+		gen->write(".end method", "\n");
 	}
 };
 #endif

@@ -446,10 +446,6 @@ factor:
 func_call:
 	ID '(' arguments ')'{ 
 		$$ = new Function_call($3, *$1);
-		if($$->get_type() != NOTYPE)
-			$$ = new Function_call($3, (*$1));
-		else
-			$$ = (Function_call*)new Null_node();
 	}
 ;
 
@@ -484,6 +480,10 @@ main(int argc, char** argv) {
 #ifndef NO_CODE
 	Code_gen cg(root);
 	cg.generate_file();
+
+//	system("java -jar jasmin.jar out.j");
+//	system("java out");
+//	system("rm -f out.class");
 #endif
 }
 

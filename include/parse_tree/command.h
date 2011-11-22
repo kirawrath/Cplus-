@@ -361,7 +361,7 @@ class Return : public Node
 					 << type_str(child[0]->get_type())
 					 << " instead." << endl;
 		}
-			}
+	}
 	void check_scope(Scope_stack* scope)
 	{
 		t_entry* t = scope->search_current_function();
@@ -369,6 +369,25 @@ class Return : public Node
 			set_type(t->type);
 		if(child.size()>0)
 			child[0]->check_scope(scope);
+	}
+	void gen_code(Code_gen* gen)
+	{
+		if(child.size()==0)
+		{
+			if(dt == IVAL || dt == LVAL)
+			{
+				gen->write("\tldc 0\n");
+				gen->write("\tireturn\n");
+				return;
+			}
+		}
+		if(dt==IVAL || dt==LVAL)
+		{
+			child[0]->gen_code(gen);
+			gen->write("\tireturn\n");
+		}		
+		else
+			cout << "Unsuported return type" << endl;
 	}
 };
 
@@ -405,14 +424,25 @@ class Function_call : public Node
 	
 	void set_line(int l){line = l;}
 	int get_line(){return line;}
+	data_type get_type()
+	{
+		if(func)
+			return func->type;
+		else
+			cout << "ouch.." << endl;
+		return NOTYPE;
+	}
 
 	void evaluate()
 	{
-		Parameter_list* params = (Parameter_list*)func->node;
+		Parameter_list* params = (Parameter_list*)func->params;
 
 		unsigned size = args->size();
 		if(size != params->size())
+		{
+			cout << size << " " << params->size() << endl;
 			throw "Incompatible number of parameters";
+		}
 
 		for(int i=0; i<size; ++i)
 		{
@@ -424,7 +454,8 @@ class Function_call : public Node
 	{
 		func = scope->search(func_id);
 		if(!func)
-			cout << "Function " << func_id << "undeclared in this scope\n";
+			cout << "Function " << func_id
+				 << "undeclared in this scope\n";
 		unsigned size = child.size();
 		for(int i=0; i<size; ++i)
 			child[i]->check_scope(scope);
@@ -433,7 +464,11 @@ class Function_call : public Node
 	{
 		return func_id;
 	}
-
+	void gen_code(Code_gen* gen)
+	{
+		gen->write("\tinvokestatic out.");
+		gen->write(func_id+"()I\n");
+	}
 };
 
 class Print : public Node
