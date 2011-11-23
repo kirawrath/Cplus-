@@ -477,13 +477,23 @@ main(int argc, char** argv) {
 	Semantic_analyzer* sa = new Semantic_analyzer(root);
 	sa->analyze();
 
+	cout << "Should proceed with the code generation? (Proceed only if there are no errors) [y/n]" << endl;
+	char ans;
+	cin >> ans;
+	if(ans != 'y')
+		return 0;
 #ifndef NO_CODE
 	Code_gen cg(root);
 	cg.generate_file();
 
-//	system("java -jar jasmin.jar out.j");
-//	system("java out");
-//	system("rm -f out.class");
+	cout << "Do you want to run your application right now? [y/n]" << endl;
+	cin >> ans;
+	if(ans != 'y')
+		return 0;
+	cout << "____________________________________________" << endl;
+	system("java -jar jasmin.jar out.j");
+	system("java out");
+	system("rm -f out.class");
 #endif
 }
 

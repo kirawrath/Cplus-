@@ -227,7 +227,7 @@ class Block : public Node
 class Cmd_list : public Block // A one command block (used by FOR and IF)
 {
 	public:
-	Cmd_list(Node* n0) : Block(new Null_node(), n0)
+	Cmd_list(Node* n0) : Block(new Vars_declarations(), n0)
 	{
 		func_params = NULL;
 	}

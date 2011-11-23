@@ -73,6 +73,7 @@ void Code_gen::generate_file(string name)
 	reg_counter = 0;
 	root->gen_code(this);
 
+	(*file) << endl;
 }
 unsigned Code_gen::get_counter()
 {
